@@ -5,7 +5,6 @@ import pandas as pd                    #data analysis library
 import pandas_datareader.data as web   #grab data from yahoo api return pandas datafream
 
 
-
 def highest_alltime(data_frame):
     """ basic algorithm to get highest all time"""
     highest_alltime=-99
