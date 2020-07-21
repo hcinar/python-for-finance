@@ -1,10 +1,12 @@
-"""Basic Stock Data Manipulation"""
+"""More stock manipulation"""
 import datetime as dt                  #for use datetime
 import matplotlib.pyplot as plt     #for charts
 from matplotlib import style           #for chart styles
 import pandas as pd                    #data analysis library
 import pandas_datareader.data as web   #grab data from yahoo api return pandas dataframe
 from pandas.plotting import register_matplotlib_converters
+from mpl_finance import candlestick_ohlc    #candelstick graph
+import matplotlib.dates as mdates    #matplotlibdates
 
 style.use('ggplot')      #plot styles look for more!
 register_matplotlib_converters()
@@ -57,6 +59,7 @@ def readData_fromcsv(csv_name):
 # print(data_frame['High'].tail())
 # highest_alltime(data_frame)   #to print highest all time
 
+"""when copy enable to get tsla stock to csv"""
 # getData_csv('TSLA','tsla.csv')     #get stock data and puts it into csv file
 
 data_frame = readData_fromcsv('tsla.csv')      #look for read csv pandas.
@@ -66,39 +69,36 @@ data_frame = readData_fromcsv('tsla.csv')      #look for read csv pandas.
 # data_frame['Open'].plot()    #matplotlib usage for plotting data
 # plt.show()           #show plotting data at the screen.
 
-data_frame['100ma'] = data_frame['Adj Close'].rolling(window=100, min_periods=0).mean()      #100moving avarage column crate
-data_frame['20ma'] = data_frame['Adj Close'].rolling(window=20, min_periods=0,).mean()      #20moving avarage column crate
+# data_frame['100ma'] = data_frame['Adj Close'].rolling(window=100, min_periods=0).mean()      #100moving avarage column crate
+# data_frame['20ma'] = data_frame['Adj Close'].rolling(window=20, min_periods=0,).mean()      #20moving avarage column crate
+
+df_ohlc = data_frame['Adj Close'].resample('10D').ohlc()
+df_volume = data_frame['Volume'].resample('10D').sum()
+
+
+df_ohlc.reset_index(inplace=True)
+df_ohlc['Date']=df_ohlc['Date'].map(mdates.date2num)
+print(df_ohlc.head())
+
 # print(data_frame.head())
 data_frame.dropna(inplace=True)             #satırlarda NA dataları temizler.
 # print(data_frame.head())
+""" subplot and plot look for that! subplots!"""
+ax1= plt.subplot2grid((7,1),(0,0),rowspan=5,colspan=1)
+ax2= plt.subplot2grid((7,1),(6,0),rowspan=1,colspan=1,sharex=ax1)
+ax1.xaxis_date()  #date display
+
+candlestick_ohlc(ax1,df_ohlc.values,width=2,colorup='g',colordown='r')
+ax2.fill_between(df_volume.index.map(mdates.date2num),df_volume.values,0)
 
 
 
-# """ subplot and plot look for that! subplots!"""
-# ax1= plt.subplot2grid((7,1),(0,0),rowspan=7,colspan=1)
-# # ax2= plt.subplot2grid((7,1),(6,0),rowspan=1,colspan=1,sharex=ax1)
 
-# """ploting data and showing it."""
+"""ploting data and showing it."""
 # ax1.plot(data_frame.index,data_frame['Adj Close'])
 # ax1.plot(data_frame.index,data_frame['100ma'])
 # ax1.plot(data_frame.index,data_frame['20ma'])
-# # ax2.bar(data_frame.index,data_frame['Volume'])
+# ax2.bar(data_frame.index,data_frame['Volume'])
 
-# plt.show()
-data_frame['100-20ma'] = (data_frame['100ma'] - data_frame['20ma'])<0.1 
-data_frame['20-100ma'] = (data_frame['20ma'] - data_frame['100ma'])<0.1
-data_frame['AdjmaRange'] = (data_frame['100ma']-data_frame['Adj Close'])
-print(data_frame['100-20ma'])
-
-
-""" subplot and plot look for that! subplots!"""
-ax1= plt.subplot2grid((8,2),(0,0),colspan=0,rowspan=7)
-ax2= plt.subplot2grid((8,2),(0,1),colspan=0,rowspan=7,sharex=ax1)
-
-"""ploting data and showing it."""
-ax1.plot(data_frame.index,data_frame['Adj Close'])
-ax1.plot(data_frame.index,data_frame['100ma'])
-ax1.plot(data_frame.index,data_frame['20ma'])
-ax2.plot(data_frame.index,data_frame["AdjmaRange"])
-ax2.bar(data_frame.index,data_frame['100-20ma']*20,color=(0.2, 0.4, 0.6, 0.6))
 plt.show()
+
